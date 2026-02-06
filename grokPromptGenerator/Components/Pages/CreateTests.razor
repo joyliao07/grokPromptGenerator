@@ -1,0 +1,217 @@
+﻿@page "/"
+@* This line enables the C# code to respond to browser events *@
+@rendermode InteractiveServer
+
+<PageTitle>Create Tests</PageTitle>
+
+<h1>Create Tests</h1>
+
+<p>Use this tool to generate prompts to create new unit/integration tests.</p>
+
+@* Final Output with Line Breaks *@
+<div class="mt-3 p-3 border bg-light" style="white-space: pre-line;">
+    <strong>Selected items:</strong>
+    Please generate <span style="color: blue;">@SelectedTestType</span> tests for (className:) "<span style="color: blue;">@ClassName</span>" 
+    @if (!string.IsNullOrWhiteSpace(@FileName))
+    {
+        @:under (namespace:) "<span style="color: blue;">@FileName</span>"
+    }
+
+    @if (SelectedItemsList.Any())
+    {
+        @:  -  @string.Join("\n  -  ", SelectedItemsList);
+    }
+</div>
+
+@* Type of tests *@
+<div class="mb-3">
+    <strong>Type of tests:</strong>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="testTypeGroup" id="unit" value="Unit"
+               checked="@(SelectedTestType == "unit")"
+               @onchange="@(() => SelectedTestType = "unit")" />
+        <label class="form-check-label" for="unit">Unit</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="testTypeGroup" id="integration" value="Integration"
+               checked="@(SelectedTestType == "integration")"
+               @onchange="@(() => SelectedTestType = "integration")" />
+        <label class="form-check-label" for="integration">Integration</label>
+    </div>
+</div>
+
+@* Text Input: Class Name *@
+<div class="mb-3" style="max-width: 650px;">
+    <label for="className" class="form-label">Class Name:</label>
+    <input type="text"
+           id="className"
+           class="form-control"
+           placeholder="Enter name..."
+           maxlength="200"
+           @bind="ClassName"
+           @bind:event="oninput" />
+    <small class="text-muted">@ClassName.Length / 200</small>
+</div>
+
+@* Text Input: File Name *@
+<div class="mb-3" style="max-width: 650px;">
+    <label for="namespace" class="form-label">namespace:</label>
+    <input type="text"
+           id="namespace"
+           class="form-control"
+           placeholder="Enter name..."
+           maxlength="200"
+           @bind="FileName"
+           @bind:event="oninput" />
+    <small class="text-muted">@FileName.Length / 200</small>
+</div>
+
+@* Checkboxes - Framework Selection*@
+<h6 class="mb-2 fw-bold text-secondary">Framework Selection</h6>
+<div class="list-group mb-3" style="max-width: 650px;">
+    @foreach (var item in MenuItems)
+    {
+        <label class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }"/>
+            @item.Name
+        </label>
+    }
+</div>
+
+@* Checkboxes - Testing Standards *@
+<h6 class="mb-2 fw-bold text-secondary">Testing Standards</h6>
+<div class="list-group mb-3" style="max-width: 650px;">
+    @foreach (var item in MenuItems2)
+    {
+        <label class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }"/>
+            @item.Name
+        </label>
+    }
+</div>
+
+@* Checkboxes - Functional Scenarios *@
+<h6 class="mb-2 fw-bold text-secondary">Functional Scenarios</h6>
+<div class="list-group mb-3" style="max-width: 650px;">
+    @foreach (var item in MenuItems3)
+    {
+        <label class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+            @item.Name
+        </label>
+    }
+</div>
+
+@* Checkboxes - Non-Functional Testing *@
+<h6 class="mb-2 fw-bold text-secondary">Non-Functional Testing</h6>
+<div class="list-group mb-3" style="max-width: 650px;">
+    @foreach (var item in MenuItems4)
+    {
+        <label class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+            @item.Name
+        </label>
+    }
+</div>
+
+@* Checkboxes - Integration-test Specific *@
+<h6 class="mb-2 fw-bold text-secondary">Integration-test Specific</h6>
+<div class="list-group mb-3" style="max-width: 650px;">
+    @foreach (var item in MenuItems5)
+    {
+        <label class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+            @item.Name
+        </label>
+    }
+</div>
+
+@* Checkboxes - Code Coverage *@
+<h6 class="mb-2 fw-bold text-secondary">Code Coverage</h6>
+<div class="list-group mb-3" style="max-width: 650px;">
+    @foreach (var item in MenuItems6)
+    {
+        <label class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+            @item.Name
+        </label>
+    }
+</div>
+
+@code {
+    private string SelectedTestType = "unit"; // Default selection
+    private string ClassName { get; set; } = "*";
+    private string FileName { get; set; } = string.Empty;
+
+    // Define a simple class to hold the menu item state
+    public class MenuItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool IsSelected { get; set; }
+    }
+
+    // Initialize your menu list
+    private List<MenuItem> MenuItems = new()
+    {
+        // framework selection:
+        new MenuItem { Name = "Use NUnit" },
+        new MenuItem { Name = "Use xUnit" },
+        new MenuItem { Name = "Use MSTest" },
+    };
+
+    private List<MenuItem> MenuItems2 = new()
+    {
+        // standards:
+        new MenuItem { Name = "Follow the AAA (Arrange, Act, Assert) pattern with clear comments" },
+        new MenuItem { Name = "Use the MethodName_StateUnderTest_ExpectedBehavior naming convention" },
+        new MenuItem { Name = "Target only public methods" },
+    };
+
+    private List<MenuItem> MenuItems3 = new()
+    {
+        // functionalScenarios:
+        new MenuItem { Name = "Include tests for normal expected inputs" },
+        new MenuItem { Name = "Include tests for edge cases" },
+        new MenuItem { Name = "Include tests for boundary conditions" },
+        new MenuItem { Name = "Include tests for null and empty inputs" },
+        new MenuItem { Name = "Include tests for invalid inputs" },
+        new MenuItem { Name = "Verify types of exception thrown" },
+    };
+
+    private List<MenuItem> MenuItems4 = new()
+    {
+        // nonFunctionalTesting:
+        new MenuItem { Name = "Include tests for performance"},
+        new MenuItem { Name = "Include tests for security" },
+        new MenuItem { Name = "Include tests for usability" },
+    };
+
+    private List<MenuItem> MenuItems5 = new()
+    {
+        // integration-specific:
+        new MenuItem { Name = "Verify database state changes" },
+        new MenuItem { Name = "Ensure cleanup after tests"},
+        new MenuItem { Name = "Verify API response status codes and payload structures"},
+        new MenuItem { Name = "Check for connection timeouts and retry logic for external services"},
+    };
+
+    private List<MenuItem> MenuItems6 = new()
+    {
+        // codeCoverage:
+        new MenuItem { Name = "Aim for at least 80% code coverage" },
+        new MenuItem { Name = "Include tests for all critical paths" },
+        new MenuItem { Name = "Include tests for error handling paths" },
+    };
+
+    // This is a Calculated Property:
+    private List<string> SelectedItemsList => MenuItems
+        .Concat(MenuItems2)
+        .Concat(MenuItems3)
+        .Concat(MenuItems4)
+        .Concat(MenuItems5)
+        .Concat(MenuItems6)
+        .Where(i => i.IsSelected)
+        .Select(i => i.Name)
+        .ToList();
+
+}

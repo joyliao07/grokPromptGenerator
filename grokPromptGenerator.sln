@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "grokPromptGenerator", "grokPromptGenerator\grokPromptGenerator.csproj", "{E081FCF6-1A6B-45CE-8A5A-01B0ECE297CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E081FCF6-1A6B-45CE-8A5A-01B0ECE297CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E081FCF6-1A6B-45CE-8A5A-01B0ECE297CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E081FCF6-1A6B-45CE-8A5A-01B0ECE297CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E081FCF6-1A6B-45CE-8A5A-01B0ECE297CF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D7A4DA4D-2B71-4B31-82B2-404503A9DD17}
+	EndGlobalSection
+EndGlobal
