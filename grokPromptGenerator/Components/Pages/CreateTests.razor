@@ -1,31 +1,44 @@
-﻿@page "/"
+﻿@page "/createTests"
 @* This line enables the C# code to respond to browser events *@
 @rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Create Tests</PageTitle>
 
 <h1>Create Tests</h1>
 
-<p>Use this tool to generate prompts to create new unit/integration tests.</p>
+<p>Use this tool to generate prompts for the AI to create new unit/integration tests.</p>
 
 @* Final Output with Line Breaks *@
-<div class="mt-3 p-3 border bg-light" style="white-space: pre-line;">
-    <strong>Selected items:</strong>
-    Please generate <span style="color: blue;">@SelectedTestType</span> tests for (className:) "<span style="color: blue;">@ClassName</span>" 
-    @if (!string.IsNullOrWhiteSpace(@FileName))
-    {
-        @:under (namespace:) "<span style="color: blue;">@FileName</span>"
-    }
-
-    @if (SelectedItemsList.Any())
-    {
-        @:  -  @string.Join("\n  -  ", SelectedItemsList);
-    }
+<div class="mt-3 p-3 border bg-light position-relative" style="white-space: pre-line;">
+    <strong>Generated Prompt:</strong>
+    @* Copy Button with Icon *@
+    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2"
+            @onclick="CopyToClipboard" title="Copy to clipboard">
+        <i class="bi bi-clipboard"></i> Copy
+    </button>
+    <div>
+        <p>Please generate <span style="color: blue;">@SelectedTestType</span> tests for (tested class or method:) "<span style="color: blue;">@ClassName</span>" </p>
+        @if (!string.IsNullOrWhiteSpace(FileName))
+        {
+            <p><span>under (namespace:) "<span style="color: blue;">@FileName</span>"</span></p>
+        }
+        @if (!string.IsNullOrWhiteSpace(TestFile))
+        {
+            <p><span>with test file: "<span style="color: blue;">@TestFile</span>"</span></p>
+        }
+        <pre>
+            @if (SelectedItemsList.Any())
+            {
+                @("   - " + string.Join("\n   - ", SelectedItemsList))
+            }
+        </pre>
+    </div>
 </div>
 
 @* Type of tests *@
-<div class="mb-3">
-    <strong>Type of tests:</strong>
+<div class="mt-3 mb-3">
+    <h6 class="mb-2 fw-bold text-secondary">Type of Tests:</h6>
     <div class="form-check">
         <input class="form-check-input" type="radio" name="testTypeGroup" id="unit" value="Unit"
                checked="@(SelectedTestType == "unit")"
@@ -41,7 +54,7 @@
 </div>
 
 @* Text Input: Class Name *@
-<div class="mb-3" style="max-width: 650px;">
+<div class="mb-3 mt-4" style="max-width: 650px;">
     <label for="className" class="form-label">Class Name:</label>
     <input type="text"
            id="className"
@@ -55,7 +68,7 @@
 
 @* Text Input: File Name *@
 <div class="mb-3" style="max-width: 650px;">
-    <label for="namespace" class="form-label">namespace:</label>
+    <label for="namespace" class="form-label">namespace (optional):</label>
     <input type="text"
            id="namespace"
            class="form-control"
@@ -66,16 +79,41 @@
     <small class="text-muted">@FileName.Length / 200</small>
 </div>
 
+@* Text Input: Test File Name *@
+<div class="mb-3" style="max-width: 650px;">
+    <label for="namespace" class="form-label">test file (optional):</label>
+    <input type="text"
+           id="namespace"
+           class="form-control"
+           placeholder="Enter name..."
+           maxlength="200"
+           @bind="TestFile"
+           @bind:event="oninput" />
+    <small class="text-muted">@TestFile.Length / 200</small>
+</div>
+
 @* Checkboxes - Framework Selection*@
 <h6 class="mb-2 fw-bold text-secondary">Framework Selection</h6>
 <div class="list-group mb-3" style="max-width: 650px;">
-    @foreach (var item in MenuItems)
+    @foreach (var item in MenuItems1)
     {
         <label class="list-group-item d-flex align-items-center">
             <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }"/>
             @item.Name
         </label>
     }
+    <!-- New Input Row -->
+    <div class="list-group-item p-0">
+        <div class="input-group">
+            <input type="text" class="form-control border-0"
+                   placeholder="Add custom item..."
+                   @bind="newItemName1"
+                   @onkeyup="HandleKeyUp1" />
+            <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem1">
+                <i class="bi bi-plus-lg">Add</i>
+            </button>
+        </div>
+    </div>
 </div>
 
 @* Checkboxes - Testing Standards *@
@@ -88,6 +126,18 @@
             @item.Name
         </label>
     }
+    <!-- New Input Row -->
+    <div class="list-group-item p-0">
+        <div class="input-group">
+            <input type="text" class="form-control border-0"
+                   placeholder="Add custom item..."
+                   @bind="newItemName2"
+                   @onkeyup="HandleKeyUp2" />
+            <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem2">
+                <i class="bi bi-plus-lg">Add</i>
+            </button>
+        </div>
+    </div>
 </div>
 
 @* Checkboxes - Functional Scenarios *@
@@ -100,6 +150,18 @@
             @item.Name
         </label>
     }
+    <!-- New Input Row -->
+    <div class="list-group-item p-0">
+        <div class="input-group">
+            <input type="text" class="form-control border-0"
+                   placeholder="Add custom item..."
+                   @bind="newItemName3"
+                   @onkeyup="HandleKeyUp3" />
+            <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem3">
+                <i class="bi bi-plus-lg">Add</i>
+            </button>
+        </div>
+    </div>
 </div>
 
 @* Checkboxes - Non-Functional Testing *@
@@ -112,6 +174,18 @@
             @item.Name
         </label>
     }
+    <!-- New Input Row -->
+    <div class="list-group-item p-0">
+        <div class="input-group">
+            <input type="text" class="form-control border-0"
+                   placeholder="Add custom item..."
+                   @bind="newItemName4"
+                   @onkeyup="HandleKeyUp4" />
+            <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem4">
+                <i class="bi bi-plus-lg">Add</i>
+            </button>
+        </div>
+    </div>
 </div>
 
 @* Checkboxes - Integration-test Specific *@
@@ -124,6 +198,18 @@
             @item.Name
         </label>
     }
+    <!-- New Input Row -->
+    <div class="list-group-item p-0">
+        <div class="input-group">
+            <input type="text" class="form-control border-0"
+                   placeholder="Add custom item..."
+                   @bind="newItemName5"
+                   @onkeyup="HandleKeyUp5" />
+            <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem5">
+                <i class="bi bi-plus-lg">Add</i>
+            </button>
+        </div>
+    </div>
 </div>
 
 @* Checkboxes - Code Coverage *@
@@ -136,12 +222,32 @@
             @item.Name
         </label>
     }
+    <!-- New Input Row -->
+    <div class="list-group-item p-0">
+        <div class="input-group">
+            <input type="text" class="form-control border-0"
+                   placeholder="Add custom item..."
+                   @bind="newItemName6"
+                   @onkeyup="HandleKeyUp6" />
+            <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem6">
+                <i class="bi bi-plus-lg">Add</i>
+            </button>
+        </div>
+    </div>
 </div>
 
 @code {
     private string SelectedTestType = "unit"; // Default selection
-    private string ClassName { get; set; } = "*";
-    private string FileName { get; set; } = string.Empty;
+    private string ClassName { get; set; } = "myClassName";
+    private string FileName { get; set; } = "";
+    private string TestFile { get; set; } = "myTestFile";
+
+    private string newItemName1 = "";
+    private string newItemName2 = "";
+    private string newItemName3 = "";
+    private string newItemName4 = "";
+    private string newItemName5 = "";
+    private string newItemName6 = "";
 
     // Define a simple class to hold the menu item state
     public class MenuItem
@@ -151,7 +257,7 @@
     }
 
     // Initialize your menu list
-    private List<MenuItem> MenuItems = new()
+    private List<MenuItem> MenuItems1 = new()
     {
         // framework selection:
         new MenuItem { Name = "Use NUnit" },
@@ -159,24 +265,72 @@
         new MenuItem { Name = "Use MSTest" },
     };
 
+    private void AddItem1()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName1))
+        {
+            MenuItems1.Add(new MenuItem { Name = newItemName1, IsSelected = true });
+            newItemName1 = "";
+        }
+    }
+
+    private void HandleKeyUp1(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem1();
+        }
+    }
+
     private List<MenuItem> MenuItems2 = new()
     {
         // standards:
         new MenuItem { Name = "Follow the AAA (Arrange, Act, Assert) pattern with clear comments" },
         new MenuItem { Name = "Use the MethodName_StateUnderTest_ExpectedBehavior naming convention" },
-        new MenuItem { Name = "Target only public methods" },
     };
+
+    private void AddItem2()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName2))
+        {
+            MenuItems2.Add(new MenuItem { Name = newItemName2, IsSelected = true });
+            newItemName2 = "";
+        }
+    }
+
+    private void HandleKeyUp2(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem2();
+        }
+    }
 
     private List<MenuItem> MenuItems3 = new()
     {
         // functionalScenarios:
         new MenuItem { Name = "Include tests for normal expected inputs" },
-        new MenuItem { Name = "Include tests for edge cases" },
         new MenuItem { Name = "Include tests for boundary conditions" },
         new MenuItem { Name = "Include tests for null and empty inputs" },
         new MenuItem { Name = "Include tests for invalid inputs" },
-        new MenuItem { Name = "Verify types of exception thrown" },
     };
+
+    private void AddItem3()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName3))
+        {
+            MenuItems3.Add(new MenuItem { Name = newItemName3, IsSelected = true });
+            newItemName3 = "";
+        }
+    }
+
+    private void HandleKeyUp3(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem3();
+        }
+    }
 
     private List<MenuItem> MenuItems4 = new()
     {
@@ -186,14 +340,47 @@
         new MenuItem { Name = "Include tests for usability" },
     };
 
+    private void AddItem4()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName4))
+        {
+            MenuItems4.Add(new MenuItem { Name = newItemName4, IsSelected = true });
+            newItemName4 = "";
+        }
+    }
+
+    private void HandleKeyUp4(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem4();
+        }
+    }
+
     private List<MenuItem> MenuItems5 = new()
     {
         // integration-specific:
         new MenuItem { Name = "Verify database state changes" },
         new MenuItem { Name = "Ensure cleanup after tests"},
         new MenuItem { Name = "Verify API response status codes and payload structures"},
-        new MenuItem { Name = "Check for connection timeouts and retry logic for external services"},
     };
+
+    private void AddItem5()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName5))
+        {
+            MenuItems5.Add(new MenuItem { Name = newItemName5, IsSelected = true });
+            newItemName5 = "";
+        }
+    }
+
+    private void HandleKeyUp5(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem5();
+        }
+    }
 
     private List<MenuItem> MenuItems6 = new()
     {
@@ -203,8 +390,25 @@
         new MenuItem { Name = "Include tests for error handling paths" },
     };
 
+    private void AddItem6()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName6))
+        {
+            MenuItems6.Add(new MenuItem { Name = newItemName6, IsSelected = true });
+            newItemName6 = "";
+        }
+    }
+
+    private void HandleKeyUp6(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem6();
+        }
+    }
+
     // This is a Calculated Property:
-    private List<string> SelectedItemsList => MenuItems
+    private List<string> SelectedItemsList => MenuItems1
         .Concat(MenuItems2)
         .Concat(MenuItems3)
         .Concat(MenuItems4)
@@ -214,4 +418,15 @@
         .Select(i => i.Name)
         .ToList();
 
+    private async Task CopyToClipboard()
+    {
+        // Build the full prompt string manually to match your UI layout
+        var fullPrompt = $"Please generate tests for (tested class or method:) \"{ClassName}\"";
+        if (!string.IsNullOrWhiteSpace(FileName)) fullPrompt += $"\nunder (namespace:) \"{FileName}\"";
+        if (!string.IsNullOrWhiteSpace(TestFile)) fullPrompt += $"\nwith the test file: \"{TestFile}\"";
+        if (SelectedItemsList.Any()) fullPrompt += "\n   - " + string.Join("\n   - ", SelectedItemsList);
+
+        // Call the browser's built-in clipboard function
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", fullPrompt);
+    }
 }

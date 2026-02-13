@@ -1,0 +1,423 @@
+﻿@page "/codeReview"
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Code Review</PageTitle>
+
+<h1>Code Review</h1>
+
+<p>Use this tool to generate prompts for an AI code review.</p>
+
+@* Final Output with Line Breaks *@
+<div class="mt-3 p-3 border bg-light position-relative" style="white-space: pre-line;">
+    <strong>Generated Prompt:</strong>
+    @* Copy Button with Icon *@
+    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2"
+            @onclick="CopyToClipboard" title="Copy to clipboard">
+        <i class="bi bi-clipboard"></i> Copy
+    </button>
+    <div> 
+        <p>Please code review for (tested class or method:) "<span style="color: blue;">@ClassName</span>"</p>
+        @if (!string.IsNullOrWhiteSpace(FileName))
+        {
+            <p><span>under (namespace:) "<span style="color: blue;">@FileName</span>"</span></p>
+        }
+        @if (!string.IsNullOrWhiteSpace(TestFile))
+        {
+            <p><span>with the test file: "<span style="color: blue;">@TestFile</span>"</span></p>
+        }
+        <pre>
+            @if (SelectedItemsList.Any())
+            {
+                @("   - " + string.Join("\n   - ", SelectedItemsList))
+            }
+        </pre>
+    </div>
+</div>
+
+@* Text Input: Class Name *@
+<div class="mb-3 mt-4" style="max-width: 650px;">
+    <label for="className" class="form-label">Class Name:</label>
+    <input type="text"
+           id="className"
+           class="form-control"
+           placeholder="Enter name..."
+           maxlength="200"
+           @bind="ClassName"
+           @bind:event="oninput" />
+    <small class="text-muted">@ClassName.Length / 200</small>
+</div>
+
+@* Text Input: File Name *@
+<div class="mb-3" style="max-width: 650px;">
+    <label for="namespace" class="form-label">namespace (optional):</label>
+    <input type="text"
+           id="namespace"
+           class="form-control"
+           placeholder="Enter name..."
+           maxlength="200"
+           @bind="FileName"
+           @bind:event="oninput" />
+    <small class="text-muted">@FileName.Length / 200</small>
+</div>
+
+@* Text Input: Test File Name *@
+<div class="mb-3" style="max-width: 650px;">
+    <label for="namespace" class="form-label">test file (optional):</label>
+    <input type="text"
+           id="namespace"
+           class="form-control"
+           placeholder="Enter name..."
+           maxlength="200"
+           @bind="TestFile"
+           @bind:event="oninput" />
+    <small class="text-muted">@TestFile.Length / 200</small>
+</div>
+
+
+@* Select-All button*@
+<div class="d-flex justify-content-end mb-2" style="max-width: 650px;">
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="selectAllSwitch"
+               checked="@IsAllSelected_1"
+               @onchange="ToggleAllSections" />
+        <label class="form-check-label fw-bold text-secondary" for="selectAllSwitch">
+            @(IsAllSelected_1 ? "Deselect All" : "Select All")
+        </label>
+    </div>
+</div>
+<div class="p-3 border rounded shadow-sm" style="max-width: 650px;">
+    @* Checkboxes - Robustness & Security*@
+    <div class="d-flex justify-content-end mb-2" style="max-width: 650px;">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="selectAllSwitch"
+                   checked="@IsAllSelected_1" 
+                   @onchange="ToggleAll_1" />
+            <label class="form-check-label fw-bold text-secondary" for="selectAllSwitch">
+                @(IsAllSelected_1 ? "Deselect Section" : "Select Section")
+            </label>
+        </div>
+    </div>
+    <h6 class="mb-2 fw-bold text-secondary">Robustness & Security</h6>
+    <div class="list-group mb-3" style="max-width: 650px;">
+        @foreach (var item in MenuItems1)
+        {
+            <label class="list-group-item d-flex align-items-center">
+                <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+                @item.Name
+            </label>
+        }
+        <!-- New Input Row -->
+        <div class="list-group-item p-0">
+            <div class="input-group">
+                <input type="text" class="form-control border-0"
+                       placeholder="Add custom item..."
+                       @bind="newItemName1"
+                       @onkeyup="HandleKeyUp1" />
+                <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem1">
+                    <i class="bi bi-plus-lg">Add</i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* Checkboxes - Logic & Performance *@
+    <div class="d-flex justify-content-end mb-2" style="max-width: 650px;">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="selectAllSwitch"
+                   checked="@IsAllSelected_2"
+                   @onchange="ToggleAll_2" />
+            <label class="form-check-label fw-bold text-secondary" for="selectAllSwitch">
+                @(IsAllSelected_2 ? "Deselect Section" : "Select Section")
+            </label>
+        </div>
+    </div>
+    <h6 class="mb-2 fw-bold text-secondary">Logic & Performance</h6>
+    <div class="list-group mb-3" style="max-width: 650px;">
+        @foreach (var item in MenuItems2)
+        {
+            <label class="list-group-item d-flex align-items-center">
+                <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+                @item.Name
+            </label>
+        }
+        <!-- New Input Row -->
+        <div class="list-group-item p-0">
+            <div class="input-group">
+                <input type="text" class="form-control border-0"
+                       placeholder="Add custom item..."
+                       @bind="newItemName2"
+                       @onkeyup="HandleKeyUp2" />
+                <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem2">
+                    <i class="bi bi-plus-lg">Add</i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* Checkboxes - Architecture & Clean Code *@
+    <div class="d-flex justify-content-end mb-2" style="max-width: 650px;">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="selectAllSwitch"
+                   checked="@IsAllSelected_3"
+                   @onchange="ToggleAll_3" />
+            <label class="form-check-label fw-bold text-secondary" for="selectAllSwitch">
+                @(IsAllSelected_3 ? "Deselect Section" : "Select Section")
+            </label>
+        </div>
+    </div>
+    <h6 class="mb-2 fw-bold text-secondary">Architecture & Clean Code</h6>
+    <div class="list-group mb-3" style="max-width: 650px;">
+        @foreach (var item in MenuItems3)
+        {
+            <label class="list-group-item d-flex align-items-center">
+                <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+                @item.Name
+            </label>
+        }
+        <!-- New Input Row -->
+        <div class="list-group-item p-0">
+            <div class="input-group">
+                <input type="text" class="form-control border-0"
+                       placeholder="Add custom item..."
+                       @bind="newItemName3"
+                       @onkeyup="HandleKeyUp3" />
+                <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem3">
+                    <i class="bi bi-plus-lg">Add</i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* Checkboxes - Quality & Compliance *@
+    <div class="d-flex justify-content-end mb-2" style="max-width: 650px;">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="selectAllSwitch"
+                   checked="@IsAllSelected_4"
+                   @onchange="ToggleAll_4" />
+            <label class="form-check-label fw-bold text-secondary" for="selectAllSwitch">
+                @(IsAllSelected_4 ? "Deselect Section" : "Select Section")
+            </label>
+        </div>
+    </div>
+    <h6 class="mb-2 fw-bold text-secondary">Quality & Compliance</h6>
+    <div class="list-group mb-3" style="max-width: 650px;">
+        @foreach (var item in MenuItems4)
+        {
+            <label class="list-group-item d-flex align-items-center">
+                <input class="form-check-input me-2" type="checkbox" @bind="item.IsSelected" @bind:after="() => { }" />
+                @item.Name
+            </label>
+        }
+        <!-- New Input Row -->
+        <div class="list-group-item p-0">
+            <div class="input-group">
+                <input type="text" class="form-control border-0"
+                       placeholder="Add custom item..."
+                       @bind="newItemName4"
+                       @onkeyup="HandleKeyUp4" />
+                <button class="btn btn-outline-secondary border-0" type="button" @onclick="AddItem4">
+                    <i class="bi bi-plus-lg">Add</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string ClassName { get; set; } = "myClassName";
+    private string FileName { get; set; } = "";
+    private string TestFile { get; set; } = "myTestFile";
+    private bool IsAllSelected_All => MenuItems1.All(i => i.IsSelected) && MenuItems2.All(i => i.IsSelected) && MenuItems3.All(i => i.IsSelected) && MenuItems4.All(i => i.IsSelected);
+    private bool IsAllSelected_1 => MenuItems1.All(i => i.IsSelected);
+    private bool IsAllSelected_2 => MenuItems2.All(i => i.IsSelected);
+    private bool IsAllSelected_3 => MenuItems3.All(i => i.IsSelected);
+    private bool IsAllSelected_4 => MenuItems4.All(i => i.IsSelected);
+
+    private string newItemName1 = "";
+    private string newItemName2 = "";
+    private string newItemName3 = "";
+    private string newItemName4 = "";
+
+    // Define a simple class to hold the menu item state
+    public class MenuItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool IsSelected { get; set; } = true;
+    }
+
+    private void ToggleAllSections()
+    {
+        bool targetState = !IsAllSelected_All;
+
+        List<MenuItem> allMenuItems = [.. MenuItems1, .. MenuItems2, .. MenuItems3, .. MenuItems4];
+
+        foreach (var item in allMenuItems)
+        {
+            item.IsSelected = targetState;
+        }
+    }
+
+    // Initialize your menu list
+    private List<MenuItem> MenuItems1 = new()
+    {
+        // Robustness & Security:
+        new MenuItem { Name = "Handle errors and exceptions properly" },
+        new MenuItem { Name = "Ensure thread safety" },
+        new MenuItem { Name = "Prevent null pointer exceptions" },
+        new MenuItem { Name = "Do not log personal or sensitive information" },
+        new MenuItem { Name = "Follow basic security best practices" },
+        new MenuItem { Name = "Validate all user inputs before processing" },
+    };
+
+    private void ToggleAll_1()
+    {
+        bool targetState = !IsAllSelected_1;
+        foreach (var item in MenuItems1)
+        {
+            item.IsSelected = targetState;
+        }
+    }
+
+    private void AddItem1()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName1))
+        {
+            MenuItems1.Add(new MenuItem { Name = newItemName1, IsSelected = true });
+            newItemName1 = "";
+        }
+    }
+
+    private void HandleKeyUp1(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem1();
+        }
+    }
+
+    private List<MenuItem> MenuItems2 = new()
+    {
+        // Logic & Performance:
+        new MenuItem { Name = "Reuse code to avoid redundancy" },
+        new MenuItem { Name = "Reduce the use of nested loops" },
+        new MenuItem { Name = "Watch out for potentially slow database queries" },
+        new MenuItem { Name = "Identify potential memory leaks especially in long running tasks" },
+        new MenuItem { Name = "Look for more efficient ways to sort or search through data" },
+    };
+
+    private void ToggleAll_2()
+    {
+        bool targetState = !IsAllSelected_2;
+        foreach (var item in MenuItems2)
+        {
+            item.IsSelected = targetState;
+        }
+    }
+
+    private void AddItem2()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName2))
+        {
+            MenuItems2.Add(new MenuItem { Name = newItemName2, IsSelected = true });
+            newItemName2 = "";
+        }
+    }
+
+    private void HandleKeyUp2(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem2();
+        }
+    }
+
+    private List<MenuItem> MenuItems3 = new()
+    {
+        // Architecture & Clean Code:
+        new MenuItem { Name = "Functions follow single-responsibility principle" },
+        new MenuItem { Name = "Code is clean and easy to understand" },
+        new MenuItem { Name = "Use meaningful names for variables and methods" },
+        new MenuItem { Name = "Remove unused code and dependencies" },
+    };
+
+    private void ToggleAll_3()
+    {
+        bool targetState = !IsAllSelected_3;
+        foreach (var item in MenuItems3)
+        {
+            item.IsSelected = targetState;
+        }
+    }
+
+    private void AddItem3()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName3))
+        {
+            MenuItems3.Add(new MenuItem { Name = newItemName3, IsSelected = true });
+            newItemName3 = "";
+        }
+    }
+
+    private void HandleKeyUp3(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem3();
+        }
+    }
+
+    private List<MenuItem> MenuItems4 = new()
+    {
+        // Quality & Compliance:
+        new MenuItem { Name = "Maintain over 90 percent test coverage"},
+        new MenuItem { Name = "Include audit logs on important events" },
+    };
+
+    private void ToggleAll_4()
+    {
+        bool targetState = !IsAllSelected_4;
+        foreach (var item in MenuItems4)
+        {
+            item.IsSelected = targetState;
+        }
+    }
+
+    private void AddItem4()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName4))
+        {
+            MenuItems4.Add(new MenuItem { Name = newItemName4, IsSelected = true });
+            newItemName4 = "";
+        }
+    }
+
+    private void HandleKeyUp4(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem4();
+        }
+    }
+
+    // This is a Calculated Property:
+    private List<string> SelectedItemsList => MenuItems1
+        .Concat(MenuItems2)
+        .Concat(MenuItems3)
+        .Concat(MenuItems4)
+        .Where(i => i.IsSelected)
+        .Select(i => i.Name)
+        .ToList();
+
+    private async Task CopyToClipboard()
+    {
+        // Build the full prompt string manually to match your UI layout
+        var fullPrompt = $"Please code review for (className:) \"{ClassName}\"";
+        if (!string.IsNullOrWhiteSpace(FileName)) fullPrompt += $"\nunder (namespace:) \"{FileName}\"";
+        if (!string.IsNullOrWhiteSpace(TestFile)) fullPrompt += $"\nwith the test file: \"{TestFile}\"";
+        if (SelectedItemsList.Any()) fullPrompt += "\n   - " + string.Join("\n   - ", SelectedItemsList);
+
+        // Call the browser's built-in clipboard function
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", fullPrompt);
+    }
+}
